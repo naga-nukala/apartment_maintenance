@@ -254,6 +254,7 @@
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 </head>
 <body>
 
@@ -465,8 +466,6 @@
   const SYNCED_KEY = STORAGE_KEY + '_synced_at';
 
   // ---- Supabase sync (fill these in from your project's API settings) ----
-  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
   const PASSCODE_KEY = STORAGE_KEY + '_passcode';
   let sb = null;
   if(window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0){
