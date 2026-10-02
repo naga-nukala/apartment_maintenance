@@ -1,7 +1,3 @@
-
-const SUPABASE_URL = 'https://oqwmpxcxkxucapxgrgas.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xd21weGN4a3h1Y2FweGdyZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3Mzc4NjEsImV4cCI6MjEwNjMxMzg2MX0.ttKexMlzPuyzcfQgdjWVOQpIEcTI3dzAu8dWrjd4x1w';
-
 const PASS_KEY='as_aptmaintenance_v1_passcode'; // shared with the tracker page
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ord=d=>d>3&&d<21?'th':({1:'st',2:'nd',3:'rd'}[d%10]||'th');
@@ -23,7 +19,9 @@ function initList(c){
   const gate=document.createElement('form');gate.className='row hidden';gate.style.marginBottom='14px';
   gate.innerHTML='<input type="password" id="gp" placeholder="Shared passcode" autocomplete="off" required><button type="submit" class="btn" style="flex:0 0 auto">Unlock sync</button>';
   const gmsg=document.createElement('div');gmsg.style.cssText='font-size:12px;color:var(--coral);margin:-8px 0 10px';
-  $('summary').before(pill,gate,gmsg);
+  let sm=$('summary');
+  if(!sm){sm=document.createElement('div');sm.id='summary';sm.className='summary';$('f').closest('.section,.panel').before(sm)}
+  sm.before(pill,gate,gmsg);
   const st=(k,t,m)=>{pill.className='syncpill '+k;$('pt').textContent=t;gmsg.textContent=m||''};
 
   async function rpc(fn,args){
