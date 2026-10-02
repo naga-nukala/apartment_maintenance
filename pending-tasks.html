@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Pending Tasks</title><link rel="stylesheet" href="common.css"></head><body>
+<h1>✅ Pending Tasks</h1>
+<a class="navlink" href="directory.html">&larr; Directory</a>
+<p class="pagesub">Tick a task when it is done.</p>
+<div class="summary" id="summary"></div>
+<div class="section"><div class="section-head"><h2>Add entry</h2></div>
+<form id="f"><div id="fields"></div><div class="row"><button type="submit" class="btn" id="saveBtn">Add</button><button type="button" class="btn cancel hidden" id="cancelBtn">Cancel</button></div></form></div>
+<div class="section"><div class="section-head"><h2>Entries</h2></div>
+<input id="q" placeholder="Search..." style="margin-bottom:10px"><ul class="list" id="list"></ul></div>
+<div id="toast"></div>
+<script src="config.js"></script><script src="common.js"></script>
+<script>initList({"key": "tasks", "check": true, "badge": "pri", "fields": [{"id": "task", "label": "Task", "req": true}, {"id": "pri", "label": "Priority", "type": "select", "opts": ["High", "Medium", "Low"]}, {"id": "cost", "label": "Estimated cost (₹)", "type": "money"}, {"id": "due", "label": "Due date", "type": "date"}, {"id": "who", "label": "Assigned to"}, {"id": "notes", "label": "Notes", "type": "textarea"}]})</script></body></html>

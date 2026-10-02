@@ -431,6 +431,31 @@
   </div>
 </details>
 
+<details class="section" id="backupSection">
+  <summary><h2>💾 Backup &amp; Restore</h2><span class="chev">▾</span></summary>
+  <div class="inner">
+    <p class="small" style="margin:0 0 10px;">Download a backup file, or restore from one. Restoring replaces the current data and syncs it to the server.</p>
+    <div class="row">
+      <button type="button" class="btn" id="exportBtn">Download backup</button>
+    </div>
+    <div class="row">
+      <div>
+        <label class="small">Restore from file</label>
+        <input type="file" id="importFile" accept=".json,application/json,text/plain">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label class="small">Or paste backup text</label>
+        <textarea id="importText" placeholder="Paste backup JSON here"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="importBtn">Restore from pasted text</button>
+    </div>
+  </div>
+</details>
+
 <div id="toast"></div>
 
 <script>
@@ -439,8 +464,8 @@
   const SYNCED_KEY = STORAGE_KEY + '_synced_at';
 
   // ---- Supabase sync (fill these in from your project's API settings) ----
-  const SUPABASE_URL = 'https://oqwmpxcxkxucapxgrgas.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xd21weGN4a3h1Y2FweGdyZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3Mzc4NjEsImV4cCI6MjEwNjMxMzg2MX0.ttKexMlzPuyzcfQgdjWVOQpIEcTI3dzAu8dWrjd4x1w';
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
   const PASSCODE_KEY = STORAGE_KEY + '_passcode';
   let sb = null;
   if(window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0){
@@ -1279,6 +1304,44 @@
   });
 
   // init
+  // ---- backup & restore ----
+  function restoreFromText(txt){
+    let p;
+    try{ p = JSON.parse(txt); }catch(e){ showToast('Not valid backup data'); return; }
+    if(!p || !Array.isArray(p.flats) || !p.months || typeof p.months !== 'object'){
+      showToast('Not valid backup data'); return;
+    }
+    if(!confirm('Replace current data with this backup?')) return;
+    state = p;
+    state.flats.forEach(f=>{ if(f.maintenance == null) f.maintenance = 0; });
+    ensureMonthDefaults(currentMonth);
+    save();
+    resetOutflowForm();
+    resetOtherIncomeForm();
+    renderAll();
+    showToast('Backup restored');
+  }
+  document.getElementById('exportBtn').addEventListener('click', function(){
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'apartment-maintenance-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  });
+  document.getElementById('importFile').addEventListener('change', function(e){
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{ restoreFromText(String(r.result)); e.target.value = ''; };
+    r.readAsText(f);
+  });
+  document.getElementById('importBtn').addEventListener('click', function(){
+    const t = document.getElementById('importText').value.trim();
+    if(!t){ showToast('Paste backup text first'); return; }
+    restoreFromText(t);
+    document.getElementById('importText').value = '';
+  });
+
   load();
   ensureMonthDefaults(currentMonth);
   resetOutflowForm();
