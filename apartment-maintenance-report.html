@@ -211,7 +211,7 @@
 </head>
 <body>
 
-<a class="back" href="apartment-maintenance.html">‹ Apartment Maintenance</a>
+<a class="back" href="directory.html">‹ Directory</a>
 <h1>Yearly Bill Report</h1>
 <div class="syncpill" id="syncPill"><span class="dot"></span><span id="syncPillText">Local only</span></div>
 <form id="syncGateForm" class="row hidden" style="margin-bottom:14px;">
@@ -272,8 +272,8 @@
   const SYNCED_KEY = STORAGE_KEY + '_synced_at';
 
   // ---- Supabase sync (fill these in from your project's API settings) ----
-  const SUPABASE_URL = 'https://oqwmpxcxkxucapxgrgas.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xd21weGN4a3h1Y2FweGdyZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3Mzc4NjEsImV4cCI6MjEwNjMxMzg2MX0.ttKexMlzPuyzcfQgdjWVOQpIEcTI3dzAu8dWrjd4x1w';
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
   const PASSCODE_KEY = STORAGE_KEY + '_passcode';
   let sb = null;
   if(window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0){
