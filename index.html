@@ -252,6 +252,9 @@
     z-index:50;
   }
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.syncpill{cursor:pointer}
+  body.viewer #flatForm, body.viewer #otherIncomeForm, body.viewer #outflowForm, body.viewer .actions, body.viewer [data-action="mark-paid"], body.viewer #adminSection, body.viewer #backupSection, body.viewer #openingOverrideSection{display:none !important;}
+  .navlink{display:inline-block;margin:-8px 0 14px;font-size:13px;color:var(--mint);text-decoration:none;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -262,7 +265,7 @@
 <a href="directory.html" style="display:inline-block;margin:-8px 0 14px;font-size:13px;color:var(--mint);text-decoration:none;">📂 Directory &rarr;</a>
 <div class="syncpill" id="syncPill"><span class="dot"></span><span id="syncPillText">Local only</span></div>
 <form id="syncGateForm" class="row hidden" id="syncGate" style="margin-bottom:14px;">
-  <input type="password" id="syncPasscodeInput" placeholder="Shared passcode" autocomplete="off">
+  <input type="password" id="syncPasscodeInput" placeholder="Passcode (admin edits, shared views)" autocomplete="off">
   <button type="submit" class="btn" style="flex:0 0 auto;">Unlock sync</button>
 </form>
 <div class="small" id="syncGateMsg" style="color:var(--coral);margin:-8px 0 10px;"></div>
@@ -467,12 +470,20 @@
     try{ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
   }
   let accessPasscode = localStorage.getItem(PASSCODE_KEY) || '';
+  const ROLE_KEY = STORAGE_KEY + '_role';
+  let role = sb ? (localStorage.getItem(ROLE_KEY) || '') : '';
+  function applyRole(){
+    const ro = !!sb && role !== 'admin';
+    document.body.classList.toggle('viewer', ro);
+    document.querySelectorAll('#inflowRows input, #notesInput, #openingOverrideInput').forEach(e=>{ e.disabled = ro; });
+  }
+  applyRole();
 
   function setSyncStatus(kind, text){
     const pill = document.getElementById('syncPill');
     if(!pill) return;
     pill.className = 'syncpill ' + kind;
-    document.getElementById('syncPillText').textContent = text;
+    document.getElementById('syncPillText').textContent = text + (kind === 'synced' && role ? (role === 'admin' ? ' \u00b7 Admin' : ' \u00b7 View only') : '');
   }
   function showSyncGate(msg){
     document.getElementById('syncGateForm').classList.remove('hidden');
@@ -496,6 +507,7 @@
   function handleAuthFailure(msg){
     accessPasscode = '';
     localStorage.removeItem(PASSCODE_KEY);
+    role = ''; localStorage.removeItem(ROLE_KEY); applyRole();
     showSyncGate(msg || 'Incorrect passcode — try again');
     setSyncStatus('offline', 'Passcode needed');
   }
@@ -508,6 +520,10 @@
       return;
     }
     hideSyncGate();
+    const rr = await callRpc('get_apartment_role', { p_passcode: accessPasscode });
+    role = rr.ok ? rr.data : (role || 'viewer');
+    try{ localStorage.setItem(ROLE_KEY, role); }catch(e){}
+    applyRole();
     const remote = pull.data;
     if(remote && remote.data){
       const localSyncedAt = localStorage.getItem(SYNCED_KEY);
@@ -524,6 +540,7 @@
         return;
       }
     }
+    if(role !== 'admin'){ setSyncStatus('synced', 'Synced'); return; }
     const push = await callRpc('save_apartment_data', { p_passcode: accessPasscode, p_data: state });
     if(!push.ok && push.invalidPasscode){ handleAuthFailure(); return; }
     if(push.ok) localStorage.setItem(SYNCED_KEY, push.data);
@@ -531,7 +548,7 @@
   }
   let pushTimer = null;
   function queuePush(){
-    if(!sb || !accessPasscode) return;
+    if(!sb || !accessPasscode || role !== 'admin') return;
     setSyncStatus('syncing', 'Syncing…');
     clearTimeout(pushTimer);
     pushTimer = setTimeout(async ()=>{
@@ -553,6 +570,14 @@
     accessPasscode = val;
     localStorage.setItem(PASSCODE_KEY, val);
     attemptSync();
+  });
+  document.getElementById('syncPill').addEventListener('click', function(){
+    if(!sb || !confirm('Sign out / switch passcode?')) return;
+    accessPasscode = ''; role = '';
+    localStorage.removeItem(PASSCODE_KEY); localStorage.removeItem(ROLE_KEY);
+    applyRole();
+    showSyncGate('Admin passcode to edit, shared passcode to view');
+    setSyncStatus('offline', 'Enter passcode');
   });
   let state = { flats: [], months: {} };
   let currentMonth = todayMonthKey();
@@ -912,6 +937,7 @@
   }
 
   function renderAll(){
+    setTimeout(applyRole, 0);
     renderMonthNav();
     renderSummary();
     renderFlatsList();

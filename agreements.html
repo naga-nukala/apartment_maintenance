@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>By-Law Agreement</title><link rel="stylesheet" href="common.css?v=5"></head><body>
+<h1>✍️ By-Law Agreement</h1>
+<a class="navlink" href="directory.html">&larr; Directory</a><a class="navlink" style="margin-left:14px" href="bylaws.html">&larr; By-Law Rules</a>
+<p class="pagesub">Import owner names from a .txt file, then tick each owner who agrees to the by-laws.</p>
+<div class="summary" id="summary"></div>
+<details class="section" id="addSection"><summary><h2>Add entry</h2><span class="chev">▾</span></summary><div class="inner">
+<form id="f"><div id="fields"></div><div class="row"><button type="submit" class="btn" id="saveBtn">Add</button><button type="button" class="btn cancel hidden" id="cancelBtn">Cancel</button></div></form></div></details>
+<div class="section"><div class="section-head"><h2>Entries</h2></div>
+<input id="q" placeholder="Search..." style="margin-bottom:10px"><ul class="list" id="list"></ul></div>
+<div id="toast"></div>
+<script src="config.js"></script><script src="common.js?v=5"></script>
+<script>initList({"key": "agreements", "check": true, "stamp": "on", "cl": ["Pending", "Agreed"], "upload": {"first": "flat", "rest": "name"}, "fields": [{"id": "name", "label": "Owner name", "req": true}, {"id": "flat", "label": "Flat no."}, {"id": "notes", "label": "Notes", "type": "textarea"}]})</script></body></html>
