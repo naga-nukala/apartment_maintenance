@@ -1,7 +1,8 @@
-const CACHE_NAME = 'apartment-maintenance-v1';
+const CACHE_NAME = 'apartment-maintenance-v2';
 const APP_SHELL = [
   './',
   './index.html',
+  './new-apartment.html',
   './apartment-maintenance-report.html',
   './agreements.html',
   './assets.html',
@@ -13,6 +14,7 @@ const APP_SHELL = [
   './presidents.html',
   './common.css',
   './common.js',
+  './apt.js',
   './config.js',
   './manifest.webmanifest',
   './pwa.js',
