@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Assets Management</title><link rel="stylesheet" href="common.css?v=5"></head><body>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Assets Management</title><link rel="stylesheet" href="common.css?v=6"></head><body>
 <h1>🧰 Assets Management</h1>
 <a class="navlink" href="directory.html">&larr; Directory</a>
 <p class="pagesub">Lifts, pumps, generators and other society assets. Attach a photo of the bill.</p>
@@ -9,5 +9,5 @@
 <div class="section"><div class="section-head"><h2>Entries</h2></div>
 <input id="q" placeholder="Search..." style="margin-bottom:10px"><ul class="list" id="list"></ul></div>
 <div id="toast"></div>
-<script src="config.js"></script><script src="common.js?v=5"></script>
+<script src="config.js"></script><script src="apt.js"></script><script src="common.js?v=6"></script>
 <script>initList({"key": "assets", "fields": [{"id": "name", "label": "Asset name", "req": true}, {"id": "cat", "label": "Category", "type": "select", "opts": ["Lift", "Generator", "Water pump", "Motor", "CCTV", "Fire safety", "Other"]}, {"id": "cost", "label": "Purchase cost (₹)", "type": "money"}, {"id": "bill", "label": "Bill (photo)", "type": "image"}, {"id": "loc", "label": "Location"}, {"id": "bought", "label": "Purchase date", "type": "date"}, {"id": "warranty", "label": "Warranty until", "type": "date"}, {"id": "vendor", "label": "Service vendor"}, {"id": "next", "label": "Next service due", "type": "date"}, {"id": "notes", "label": "Notes", "type": "textarea"}]})</script></body></html>

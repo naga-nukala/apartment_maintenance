@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Apartments</title><link rel="stylesheet" href="common.css?v=6"></head><body>
+<h1>🏢 Apartments</h1>
+<a class="navlink" href="directory.html">&larr; Directory</a>
+<p class="pagesub">App owner only. Creating or listing apartments needs the platform passcode.</p>
+<div class="section"><div class="section-head"><h2>Platform passcode</h2></div>
+<input type="password" id="pp" placeholder="Platform passcode" autocomplete="off"></div>
+<div class="section"><div class="section-head"><h2>Create apartment</h2></div>
+<form id="cf">
+<div><label class="small">Apartment code * (3-30: lowercase letters, numbers, dashes)</label><input id="ac" required pattern="[a-z0-9][a-z0-9\-]{2,29}" placeholder="sunrise-heights" autocapitalize="none" autocomplete="off"></div>
+<div><label class="small">Apartment name *</label><input id="an" required placeholder="Sunrise Heights"></div>
+<div><label class="small">Admin passcode * (can edit, min 8 characters)</label><input type="password" id="ad" required minlength="8" autocomplete="off"></div>
+<div><label class="small">Shared passcode * (view only, min 8 characters)</label><input type="password" id="sh" required minlength="8" autocomplete="off"></div>
+<div><label class="small">Super admin passcode (optional; can only change the shared passcode)</label><input type="password" id="su" autocomplete="off"></div>
+<button type="submit" class="btn">Create apartment</button>
+</form><div id="out" class="pagesub" style="margin:0"></div></div>
+<div class="section"><div class="section-head"><h2>Existing apartments</h2></div>
+<button type="button" class="btn cancel" id="ld" style="margin-bottom:10px">Load list</button><ul class="list" id="al"></ul></div>
+<div id="toast"></div>
+<script src="config.js"></script>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function rpc(fn,args){
+  if(typeof SUPABASE_URL==='undefined'||!SUPABASE_URL.startsWith('http'))throw new Error('Set SUPABASE_URL and SUPABASE_ANON_KEY in config.js');
+  const h={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY};
+  if(SUPABASE_ANON_KEY.startsWith('eyJ'))h.Authorization='Bearer '+SUPABASE_ANON_KEY;
+  const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(args)});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok)throw new Error((j&&j.message)||'Request failed');
+  return j;
+}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+async function list(){
+  try{const a=await rpc('list_apartments',{p_platform_passcode:$('pp').value});
+    $('al').innerHTML=a.length?a.map(x=>`<li class="item"><div class="info"><div class="title">${esc(x.name||x.id)}</div><div class="sub">Code: ${esc(x.id)}</div><div class="sub">Link: ${esc(new URL('index.html?apt='+x.id,location.href).href)}</div></div></li>`).join(''):'<div class="empty">No apartments.</div>'}
+  catch(e){toast(e.message)}
+}
+$('ld').onclick=list;
+$('cf').onsubmit=async e=>{e.preventDefault();
+  const code=$('ac').value.trim().toLowerCase();
+  try{await rpc('create_apartment',{p_platform_passcode:$('pp').value,p_apt:code,p_name:$('an').value.trim(),p_admin_passcode:$('ad').value,p_shared_passcode:$('sh').value,p_super_passcode:$('su').value||null});
+    const link=new URL('index.html?apt='+code,location.href).href;
+    $('out').innerHTML='Created. Share this link (residents use the shared passcode): <a href="'+esc(link)+'">'+esc(link)+'</a>';
+    $('cf').reset();toast('Apartment created');list()}
+  catch(x){toast(x.message)}};
+</script></body></html>

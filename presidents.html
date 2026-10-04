@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Presidents</title><link rel="stylesheet" href="common.css?v=5"></head><body>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Presidents</title><link rel="stylesheet" href="common.css?v=6"></head><body>
 <h1>🏛️ Presidents</h1>
 <a class="navlink" href="directory.html">&larr; Directory</a>
 <p class="pagesub">Who is president now, who served before, and who is planned next.</p>
@@ -9,5 +9,5 @@
 <div class="section"><div class="section-head"><h2>Entries</h2></div>
 <input id="q" placeholder="Search..." style="margin-bottom:10px"><ul class="list" id="list"></ul></div>
 <div id="toast"></div>
-<script src="config.js"></script><script src="common.js?v=5"></script>
+<script src="config.js"></script><script src="apt.js"></script><script src="common.js?v=6"></script>
 <script>initList({"key": "presidents", "group": {"id": "status", "order": ["Current", "Planned", "Previous"], "asc": ["Planned"]}, "sort": "from", "fields": [{"id": "name", "label": "Name", "req": true}, {"id": "status", "label": "Status", "type": "select", "opts": ["Current", "Planned", "Previous"]}, {"id": "flat", "label": "Flat no."}, {"id": "from", "label": "Term starts", "type": "date"}, {"id": "to", "label": "Term ends", "type": "date"}, {"id": "notes", "label": "Notes", "type": "textarea"}]})</script></body></html>

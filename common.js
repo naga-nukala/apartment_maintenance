@@ -1,4 +1,3 @@
-const PASS_KEY='as_aptmaintenance_v1_passcode', ROLE_KEY='as_aptmaintenance_v1_role'; // shared with the tracker
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ord=d=>d>3&&d<21?'th':({1:'st',2:'nd',3:'rd'}[d%10]||'th');
 function fmtDate(iso){if(!iso)return '';const d=new Date(iso+'T00:00:00');if(isNaN(d))return '';return d.getDate()+ord(d.getDate())+' '+MON[d.getMonth()]+' '+d.getFullYear()}
@@ -7,7 +6,7 @@ function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMo
 function shrink(file){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);ok(cv.toDataURL('image/jpeg',.6))};im.src=r.result};r.readAsDataURL(file)})}
 
 function initList(c){
-  const K='as_aptmaintenance_v1_'+c.key,$=id=>document.getElementById(id);
+  const K=aptKey('as_aptmaintenance_v1_'+c.key),$=id=>document.getElementById(id);
   const configured=typeof SUPABASE_URL!=='undefined'&&SUPABASE_URL.startsWith('http');
   let all=[],eid=null,timer=null,tt=null,imgs={},pass=localStorage.getItem(PASS_KEY)||'',role=configured?(localStorage.getItem(ROLE_KEY)||''):'';
   try{all=JSON.parse(localStorage.getItem(K))||[]}catch(e){}
@@ -21,19 +20,20 @@ function initList(c){
   // sync pill + passcode gate
   const pill=document.createElement('div');pill.className='syncpill offline';pill.title='Tap to switch passcode';
   pill.innerHTML='<span class="dot"></span><span id="pt">Local only</span>';
-  const gate=document.createElement('form');gate.className='row hidden';gate.style.marginBottom='14px';
-  gate.innerHTML='<input type="password" id="gp" placeholder="Passcode (admin edits, shared views)" autocomplete="off" required><button type="submit" class="btn" style="flex:0 0 auto">Unlock</button>';
+  const gate=document.createElement('form');gate.className='row hidden';gate.style.cssText='margin-bottom:14px;flex-wrap:wrap';
+  gate.innerHTML='<input type="text" id="ga" placeholder="Apartment code" autocomplete="off" autocapitalize="none" required style="min-width:140px"><input type="password" id="gp" placeholder="Passcode (admin edits, shared views)" autocomplete="off" required style="min-width:140px"><button type="submit" class="btn" style="flex:0 0 auto">Unlock</button>';gate.querySelector('#ga').value=curApt();
   const gmsg=document.createElement('div');gmsg.style.cssText='font-size:12px;color:var(--coral);margin:-8px 0 10px';
   let sm=$('summary');
   if(!sm){sm=document.createElement('div');sm.id='summary';sm.className='summary';$('f').closest('.section,.panel').before(sm)}
   sm.before(pill,gate,gmsg);
+  const tag=()=>(localStorage.getItem(NAME_KEY)||curApt())+' \u00b7 '+(role==='admin'?'Admin':'View only');
   const st=(k,t,m)=>{pill.className='syncpill '+k;$('pt').textContent=t;gmsg.textContent=m||''};
   const signOut=()=>{pass='';role='';localStorage.removeItem(PASS_KEY);localStorage.removeItem(ROLE_KEY);applyRole();render()};
 
   async function rpc(fn,args){
     const h={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY};
     if(SUPABASE_ANON_KEY.startsWith('eyJ'))h.Authorization='Bearer '+SUPABASE_ANON_KEY;
-    const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(args)});
+    const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify({p_apt:curApt(),...args})});
     const j=await r.json().catch(()=>null);
     if(!r.ok){const m=(j&&j.message)||'',e=new Error(m);e.bad=/invalid passcode/i.test(m);e.adm=/admin passcode required/i.test(m);throw e}
     return j;
@@ -45,21 +45,21 @@ function initList(c){
     if(!pass){gate.classList.remove('hidden');st('offline','Enter passcode to sync');return}
     st('syncing','Syncing\u2026');
     try{
-      try{role=await rpc('get_apartment_role',{p_passcode:pass})}catch(e){if(e.bad)throw e;role=role||'viewer'}
+      try{const rr=await rpc('get_apartment_role',{p_passcode:pass});role=rr.role;if(rr.name)localStorage.setItem(NAME_KEY,rr.name)}catch(e){if(e.bad)throw e;role=role||'viewer'}
       localStorage.setItem(ROLE_KEY,role);applyRole();
       let remote=await rpc('get_apartment_list',{p_passcode:pass,p_key:c.key});
       if(!Array.isArray(remote))remote=[];
       all=merge(all,remote);persist();render();
       if(role==='admin'&&sig(all)!==sig(remote))await rpc('save_apartment_list',{p_passcode:pass,p_key:c.key,p_data:all});
-      gate.classList.add('hidden');st('synced','Synced \u00b7 '+(role==='admin'?'Admin':'View only'));
+      gate.classList.add('hidden');st('synced','Synced \u00b7 '+tag());
     }catch(e){
       if(e.bad){signOut();gate.classList.remove('hidden');st('offline','Passcode needed','Incorrect passcode \u2014 try again')}
-      else if(e.adm){role='viewer';applyRole();render();st('synced','Synced \u00b7 View only')}
+      else if(e.adm){role='viewer';applyRole();render();st('synced','Synced \u00b7 '+tag())}
       else st('offline','Offline \u2014 will retry');
     }
   }
   const commit=m=>{if(ro())return;persist();render();toast(m);clearTimeout(timer);timer=setTimeout(sync,600)};
-  gate.onsubmit=e=>{e.preventDefault();pass=$('gp').value.trim();localStorage.setItem(PASS_KEY,pass);$('gp').value='';sync()};
+  gate.onsubmit=e=>{e.preventDefault();const a=$('ga').value.trim().toLowerCase(),p=$('gp').value.trim();localStorage.setItem(PASS_KEY,p);$('gp').value='';if(a&&a!==curApt()){localStorage.setItem(APT_KEY,a);[ROLE_KEY,NAME_KEY].forEach(k=>localStorage.removeItem(k));location.reload();return}pass=p;sync()};
   pill.onclick=()=>{if(configured&&confirm('Sign out / switch passcode?')){signOut();gate.classList.remove('hidden');st('offline','Enter passcode','Admin passcode to edit, shared passcode to view')}};
   addEventListener('online',sync);
 

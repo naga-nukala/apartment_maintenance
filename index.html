@@ -258,14 +258,16 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="apt.js"></script>
 </head>
 <body>
 
 <h1>Apartment Maintenance Tracker</h1>
 <a href="directory.html" style="display:inline-block;margin:-8px 0 14px;font-size:13px;color:var(--mint);text-decoration:none;">📂 Directory &rarr;</a>
 <div class="syncpill" id="syncPill"><span class="dot"></span><span id="syncPillText">Local only</span></div>
-<form id="syncGateForm" class="row hidden" id="syncGate" style="margin-bottom:14px;">
-  <input type="password" id="syncPasscodeInput" placeholder="Passcode (admin edits, shared views)" autocomplete="off">
+<form id="syncGateForm" class="row hidden" id="syncGate" style="margin-bottom:14px;flex-wrap:wrap;">
+  <input type="text" id="syncAptInput" placeholder="Apartment code" autocomplete="off" autocapitalize="none" style="min-width:140px;">
+  <input type="password" id="syncPasscodeInput" style="min-width:140px;" placeholder="Passcode (admin edits, shared views)" autocomplete="off">
   <button type="submit" class="btn" style="flex:0 0 auto;">Unlock sync</button>
 </form>
 <div class="small" id="syncGateMsg" style="color:var(--coral);margin:-8px 0 10px;"></div>
@@ -468,17 +470,16 @@
 
 <script>
 (function(){
-  const STORAGE_KEY = 'as_aptmaintenance_v1';
+  const STORAGE_KEY = aptKey('as_aptmaintenance_v1');
   const SYNCED_KEY = STORAGE_KEY + '_synced_at';
 
   // ---- Supabase sync (fill these in from your project's API settings) ----
-  const PASSCODE_KEY = STORAGE_KEY + '_passcode';
+  const PASSCODE_KEY = PASS_KEY;
   let sb = null;
   if(window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0){
     try{ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
   }
   let accessPasscode = localStorage.getItem(PASSCODE_KEY) || '';
-  const ROLE_KEY = STORAGE_KEY + '_role';
   let role = sb ? (localStorage.getItem(ROLE_KEY) || '') : '';
   function applyRole(){
     const ro = !!sb && role !== 'admin';
@@ -491,7 +492,7 @@
     const pill = document.getElementById('syncPill');
     if(!pill) return;
     pill.className = 'syncpill ' + kind;
-    document.getElementById('syncPillText').textContent = text + (kind === 'synced' && role ? (role === 'admin' ? ' \u00b7 Admin' : ' \u00b7 View only') : '');
+    document.getElementById('syncPillText').textContent = text + (kind === 'synced' && role ? ' \u00b7 ' + (localStorage.getItem(NAME_KEY) || curApt()) + ' \u00b7 ' + (role === 'admin' ? 'Admin' : 'View only') : '');
   }
   function showSyncGate(msg){
     document.getElementById('syncGateForm').classList.remove('hidden');
@@ -504,7 +505,7 @@
   // Every call checks the passcode server-side; the anon key alone opens nothing.
   async function callRpc(fn, args){
     try{
-      const { data, error } = await sb.rpc(fn, args);
+      const { data, error } = await sb.rpc(fn, Object.assign({ p_apt: curApt() }, args));
       if(error) throw error;
       return { ok:true, data };
     }catch(e){
@@ -529,7 +530,8 @@
     }
     hideSyncGate();
     const rr = await callRpc('get_apartment_role', { p_passcode: accessPasscode });
-    role = rr.ok ? rr.data : (role || 'viewer');
+    role = rr.ok ? rr.data.role : (role || 'viewer');
+    if(rr.ok && rr.data.name){ try{ localStorage.setItem(NAME_KEY, rr.data.name); }catch(e){} }
     try{ localStorage.setItem(ROLE_KEY, role); }catch(e){}
     applyRole();
     const remote = pull.data;
@@ -575,10 +577,16 @@
     e.preventDefault();
     const val = document.getElementById('syncPasscodeInput').value.trim();
     if(!val) return;
-    accessPasscode = val;
+    const apt = document.getElementById('syncAptInput').value.trim().toLowerCase();
     localStorage.setItem(PASSCODE_KEY, val);
+    if(apt && apt !== curApt()){
+      localStorage.setItem(APT_KEY, apt); localStorage.removeItem(ROLE_KEY); localStorage.removeItem(NAME_KEY);
+      location.reload(); return;
+    }
+    accessPasscode = val;
     attemptSync();
   });
+  document.getElementById('syncAptInput').value = curApt();
   document.getElementById('syncPill').addEventListener('click', function(){
     if(!sb || !confirm('Sign out / switch passcode?')) return;
     accessPasscode = ''; role = '';
