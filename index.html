@@ -300,8 +300,9 @@
 </div>
 
 <!-- OTHER INCOME -->
-<div class="section" id="otherIncomeSection">
-  <h2>Other Income</h2>
+<details class="section" id="otherIncomeSection">
+  <summary><h2>Other Income</h2><span class="chev">▾</span></summary>
+  <div class="inner">
   <form id="otherIncomeForm">
     <div class="row">
       <div>
@@ -325,7 +326,8 @@
     </div>
   </form>
   <ul class="list" id="otherIncomeList"></ul>
-</div>
+  </div>
+</details>
 
 <!-- FLATS MASTER -->
 <details class="section" id="flatsSection">
@@ -377,6 +379,11 @@
 <div class="section">
   <h2>Bills &amp; Payments</h2>
   <form id="outflowForm">
+    <div class="row" id="billChips" style="flex-wrap:wrap;gap:6px;">
+      <button type="button" class="btn cancel small" data-bill="Watchmen Salary" style="flex:0 0 auto;">Watchmen Salary</button>
+      <button type="button" class="btn cancel small" data-bill="Garbage" style="flex:0 0 auto;">Garbage</button>
+      <button type="button" class="btn cancel small" data-bill="Power Bill" style="flex:0 0 auto;">Power Bill</button>
+    </div>
     <div class="row">
       <div>
         <label class="small">Description</label>
@@ -393,6 +400,7 @@
         <input type="date" id="outDate" required>
       </div>
     </div>
+    <label class="small" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="outRepeat" style="width:auto;"> Repeat in following months (same amount)</label>
     <div class="row">
       <button type="submit" class="btn" id="outSubmitBtn">Add Entry</button>
       <button type="button" class="btn cancel" id="outCancelBtn" style="display:none;">Cancel</button>
@@ -1250,6 +1258,13 @@
       month.outflows.push({id: uid(), desc, amount, date});
       showToast('Entry added');
     }
+    if(document.getElementById('outRepeat').checked){
+      monthKeys().filter(k=>k>currentMonth).forEach(k=>{
+        const m = state.months[k], d = mapDateToMonth(date, k);
+        const hit = m.outflows.find(o=>String(o.desc).trim().toLowerCase() === desc.toLowerCase());
+        if(hit){ hit.amount = amount; hit.date = d; } else { m.outflows.push({id: uid(), desc, amount, date: d}); }
+      });
+    }
     save();
     resetOutflowForm();
     renderOutflows();
@@ -1257,6 +1272,10 @@
   });
 
   outCancelBtn.addEventListener('click', resetOutflowForm);
+  document.getElementById('billChips').addEventListener('click', function(e){
+    const b = e.target.closest('[data-bill]'); if(!b) return;
+    outDesc.value = b.dataset.bill; outAmount.focus();
+  });
 
   document.getElementById('outflowList').addEventListener('click', function(e){
     const btn = e.target.closest('button[data-action]');
