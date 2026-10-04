@@ -253,7 +253,7 @@
   }
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .syncpill{cursor:pointer}
-  body.viewer #flatForm, body.viewer #otherIncomeForm, body.viewer #outflowForm, body.viewer .actions, body.viewer [data-action="mark-paid"], body.viewer #adminSection, body.viewer #backupSection, body.viewer #openingOverrideSection{display:none !important;}
+  body.viewer #flatForm, body.viewer #otherIncomeForm, body.viewer #outflowForm, body.viewer .actions, body.viewer [data-action="mark-paid"], body.viewer #backupSection, body.viewer #openingOverrideSection{display:none !important;}
   .navlink{display:inline-block;margin:-8px 0 14px;font-size:13px;color:var(--mint);text-decoration:none;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -408,13 +408,13 @@
 </div>
 
 <details class="section" id="adminSection">
-  <summary><h2>⚙️ Admin: Shared Passcode</h2><span class="chev">▾</span></summary>
+  <summary><h2>⚙️ Super Admin: Shared Passcode</h2><span class="chev">▾</span></summary>
   <div class="inner">
-    <p class="small" style="margin:0 0 10px;">Changes the passcode everyone else uses to sync. Requires the separate admin passcode.</p>
+    <p class="small" style="margin:0 0 10px;">Changes the view-only passcode residents use. Needs the super admin passcode, which cannot read or edit any data.</p>
     <form id="adminForm">
       <div class="row">
         <div>
-          <label class="small">Admin Passcode</label>
+          <label class="small">Super Admin Passcode</label>
           <input type="password" id="adminPasscodeInput" autocomplete="off" required>
         </div>
       </div>
@@ -1313,14 +1313,13 @@
     if(!adminPass || !newPass) return;
     const res = await callRpc('set_access_passcode', { p_admin_passcode: adminPass, p_new_passcode: newPass });
     if(res.ok){
-      accessPasscode = newPass;
-      localStorage.setItem(PASSCODE_KEY, newPass);
+      if(role !== 'admin'){ accessPasscode = newPass; localStorage.setItem(PASSCODE_KEY, newPass); }
       document.getElementById('adminForm').reset();
       hideSyncGate();
       showToast('Shared passcode updated');
       setSyncStatus('synced', 'Synced');
     }else{
-      showToast(res.invalidPasscode ? 'Wrong admin passcode' : 'Could not update — check connection');
+      showToast(res.invalidPasscode ? 'Wrong super admin passcode' : 'Could not update — check connection');
     }
   });
 
